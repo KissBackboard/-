@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, addial-scale=1.0">
+    <title></title>
+    <!-- 主要的CSS -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+    <div id="root">
+        <!-- 用于输入新增用户信息的表单 -->
+        <transition name="modalBox" appear>
+            <div v-show="showOperate" class="operate" @click.self="showOperate = ifOwlSpeak = false">
+                <div @keyup.enter.stop="affirm">
+                    <label>学号:</label>
+                    <input type="number" ref="addCode" v-model="addCode" @input="OwlSpeakShow('若学号重复会无法提交哦')"><br>
+                    <label>姓名:</label>
+                    <input type="text" @keydown="banSpace" v-model="addName"><br>
+                    <label>性别:</label>
+                    <select class="addSex" v-model="addSex" @change="OwlSpeakShow('原来是一位' + addSex + '同学啊')">
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                    </select><br>
+                    <label>年龄:</label>
+                    <input type="number" v-model="addAge" @input="OwlSpeakShow('按回车也可以提交哦')"><br>
+                    <button @click="affirm" class="affirmBtn">确定</button>
+                    <button @click="showOperate = ifOwlSpeak = false" class="cancelBtn">取消</button>
+                </div>
+            </div>
+        </transition>
+        <!-- 新增、查询、回收站功能 -->
+        <button @click="add" class="addBtn" @mouseenter="OwlSpeakShow('是有新同学要来吗')" @mouseleave="OwlSpeakHide">添加学生</button>
+        <input type="text" placeholder="按姓名查询" class="inquireName" @focus="inquireAlone('name')" v-model="inquireNameValue" @input="inquireName" @mouseenter="OwlSpeakShow('输入后会自动查询')" @mouseleave="OwlSpeakHide">
+        <input type="number" placeholder="按学号查询" class="inquireCode" @focus="inquireAlone('code')" v-model="inquireCodeValue" @input="inquireCode" @mouseenter="OwlSpeakShow('用完整学号查询最准确了')" @mouseleave="OwlSpeakHide">
+        <button class="recycleBtn" @click="showRecycle = true" @mouseenter="OwlSpeakShow('可以查看被删除的学生')" @mouseleave="OwlSpeakHide">回收站</button>
+        <!-- 回收站表格 -->
+        <transition name="modalBox" appear>
+            <div class="recycleInfoTable" @click.self="showRecycle = false" v-show="showRecycle">
+                <h1>回收站</h1>
+                <table cellspacing='1' cellpadding='0' class="infoTable">
+                    <thead>
+                        <tr>
+                            <th @click="recycleVariousSort('code')" @mouseenter="OwlSpeakShow('点击可以按学号排序')" @mouseleave="OwlSpeakHide">学号</th>
+                            <th @click="recycleVariousSort('name')" @mouseenter="OwlSpeakShow('点击可以按姓名排序')" @mouseleave="OwlSpeakHide">姓名</th>
+                            <th @click="recycleVariousSort('date')" @mouseenter="OwlSpeakShow('点击可以按日期排序')" @mouseleave="OwlSpeakHide">删除时间</th>
+                            <th @dblclick="allEmpty" @mouseenter="OwlSpeakShow('双击清空回收站所有信息')" @mouseleave="OwlSpeakHide">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody is="transition-group" name="fade" appear>
+                        <tr v-for="user in recycleInfo" v-show="user.satisfy" :key="user.id">
+                            <td>{{user.code}}</td>
+                            <td>{{user.name}}</td>
+                            <td>{{user.date | timeformater}}</td>
+                            <!--还原和彻底删除操作 -->
+                            <td>
+                                <button class="saveBtn" @click="reductionInfo(user)" @mouseenter="OwlSpeakShow('点击还原 ' + user.name + ' 的信息')" @mouseleave="OwlSpeakHide">还原</button>
+                                <button class="deleteBtn" @click="thoroughDeleteInfo(user)" @mouseenter="OwlSpeakShow('彻底删除 ' + user.name + ' 的信息')" @mouseleave="OwlSpeakHide">彻底删除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </transition>
+        <!-- 学生信息表格 -->
+        <table cellspacing='1' cellpadding='0' class="infoTable">
+            <thead>
+                <tr>
+                    <th @click="variousSort('code')" @mouseenter="OwlSpeakShow('点击可以按学号排序')" @mouseleave="OwlSpeakHide">学号</th>
+                    <th @click="variousSort('name')" @mouseenter="OwlSpeakShow('点击按姓氏首字母排序')" @mouseleave="OwlSpeakHide">姓名</th>
+                    <th @click="variousSort('sex')" @mouseenter="OwlSpeakShow('点击可以按性别排序')" @mouseleave="OwlSpeakHide">性别</th>
+                    <th @click="variousSort('age')" @mouseenter="OwlSpeakShow('点击可以按年龄排序')" @mouseleave="OwlSpeakHide">年龄</th>
+                    <th @mouseenter="OwlSpeakShow('目前一共有 ' + info.length + ' 位学生')" @mouseleave="OwlSpeakHide">操作</th>
+                </tr>
+            </thead>
+            <tbody is="transition-group" name="fade" appear>
+                <tr v-for="user in info" v-show="user.satisfy" @keyup.enter.stop="currentCodeIfRepeat(user)" :key="user.id">
+                    <td>
+                        <span v-show="!user.isEdit">{{user.code}}</span><input ref="editFirst" v-show="user.isEdit" type="number" v-model="user.code" @input="OwlSpeakShow('若学号重复会无法保存哦')">
+                    </td>
+                    <td>
+                        <span v-show="!user.isEdit">{{user.name}}</span><input v-show="user.isEdit" type="text" v-model="user.name" @keydown="banSpace">
+                    </td>
+                    <td>
+                        <span v-show="!user.isEdit">{{user.sex}}</span>
+                        <select v-show="user.isEdit" v-model="user.sex">
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </td>
+                    <td>
+                        <span v-show="!user.isEdit">{{user.age}}</span><input v-show="user.isEdit" type="number" v-model="user.age">
+                    </td>
+                    <!-- 编辑和删除操作 -->
+                    <td>
+                        <button v-show="user.isEdit" @click="edit(user)" class="saveBtn" @mouseenter="OwlSpeakShow('按回车键也可以保存哦')" @mouseleave="OwlSpeakHide">保存</button>
+                        <button v-show="!user.isEdit" @click="edit(user)" class="editBtn" @mouseenter="OwlSpeakShow(user.name +' 的信息有误吗')" @mouseleave="OwlSpeakHide">编辑</button>
+                        <button @click="deleteInfo(user)" class="deleteBtn" @mouseenter="OwlSpeakShow('你要删除 '+ user.name +' 吗?')" @mouseleave="OwlSpeakHide">删除</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- 猫头鹰 webGL -->
+        <div class="owl" @mouseenter="OwlSpeakShow('应该不会有bug了吧...')" @mouseleave="OwlSpeakHide" v-show="ifOwl">
+            <div :class="[{ cover: !owlLoadIfSucceed }, { part: owlLoadIfSucceed }]" @click="ifOwl = false" @mouseenter="OwlSpeakShow('点击后将把我隐藏')" @mouseleave="OwlSpeakHide">{{owlLoadInfo}}</div>
+            <p v-show="ifOwlSpeak">{{owlSpeak}}</p>
+            <!-- 使用Spline3D设计工具制作 -->
+            <iframe src='https://my.spline.design/copy-15a6b025c7aac1efc79c2de6c4aac93a/' frameborder='0' width='180px' height='180px' scrolling="no" @load="owlLoad"></iframe>
+        </div>
+    </div>
+    <!-- JS部分 -->
+    <script src="js/dayjs.min.js"></script>
+    <script src="js/vue.js"></script>
+    <!-- 默认的学生信息，方便测试各个功能（可删除） -->
+    <script src="js/defaultInfo.js"></script>
+    <!-- 主要的JS -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>
