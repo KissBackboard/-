@@ -1,1 +1,2 @@
-_实现了:增删改查、排序、趣味提示信息、回收站_
+_实现增删改查、示例、趣味提示信息、回收站_
+演示地址：https://codepen.io/kissbackboard/pen/oNExNKL
