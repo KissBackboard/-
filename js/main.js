@@ -276,7 +276,7 @@ const vm = new Vue({
             },
         },
     },
-    created() {
+    mounted() {
         // 恢复各个属性的默认值（防止刷新网页后还处于编辑、查询等状态）
         this.info.forEach(element => {
             element.isEdit = false;
